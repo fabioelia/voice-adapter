@@ -1,0 +1,453 @@
+[
+ {
+  "input": "emb_0",
+  "node": "/embeddings/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 0,
+   "add": 0
+  },
+  "index_expr": "Gather(codes, Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 209312978,
+   "length": 69787648,
+   "dims": [
+    155776,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 279100626,
+   "length": 8723456,
+   "dims": [
+    155776,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 287824082,
+   "length": 2180864,
+   "dims": [
+    155776,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_1",
+  "node": "/codebook_embeddings/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 1,
+   "add": 0
+  },
+  "index_expr": "Gather(codes, Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_2",
+  "node": "/codebook_embeddings_1/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 2,
+   "add": 4096
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_3",
+  "node": "/codebook_embeddings_2/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 3,
+   "add": 8192
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_4",
+  "node": "/codebook_embeddings_3/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 4,
+   "add": 12288
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_5",
+  "node": "/codebook_embeddings_4/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 5,
+   "add": 16384
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_6",
+  "node": "/codebook_embeddings_5/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 6,
+   "add": 20480
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_7",
+  "node": "/codebook_embeddings_6/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 7,
+   "add": 24576
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_8",
+  "node": "/codebook_embeddings_7/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 8,
+   "add": 28672
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_9",
+  "node": "/codebook_embeddings_8/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 9,
+   "add": 32768
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ },
+ {
+  "input": "emb_10",
+  "node": "/codebook_embeddings_9/Gather_Q4",
+  "source": {
+   "from": "codes",
+   "row": 10,
+   "add": 36864
+  },
+  "index_expr": "Add(Gather(codes, Constant()), Constant())",
+  "block_size": 32,
+  "weight": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 188095698,
+   "length": 18350080,
+   "dims": [
+    40960,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 206445778,
+   "length": 2293760,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "slow_ar_int4.onnx.data",
+   "offset": 208739538,
+   "length": 573440,
+   "dims": [
+    40960,
+    28
+   ],
+   "dtype": 21
+  }
+ }
+]

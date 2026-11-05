@@ -1,0 +1,165 @@
+{
+ "version": 1,
+ "graphs": {
+  "frontend": {
+   "parts": [
+    "frontend.onnx"
+   ],
+   "external": []
+  },
+  "prosody": {
+   "parts": [
+    "prosody.onnx"
+   ],
+   "external": []
+  },
+  "decoder": {
+   "parts": [
+    "decoder.onnx"
+   ],
+   "external": [
+    "decoder_weights.bin"
+   ]
+  },
+  "train_step": {
+   "parts": [
+    "train_step.onnx"
+   ],
+   "external": [
+    "decoder_weights.bin"
+   ]
+  }
+ },
+ "external": {
+  "decoder_weights.bin": [
+   "decoder_weights.bin.part0",
+   "decoder_weights.bin.part1"
+  ]
+ },
+ "train": {
+  "crop_frames": 48,
+  "bias_sizes": [
+   1028,
+   2048,
+   2180,
+   2048,
+   2180,
+   2048,
+   2180,
+   2048,
+   2180,
+   1024,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   512,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256,
+   256
+  ],
+  "bias_names": [
+   "encode.norm1.fc.bias",
+   "encode.norm2.fc.bias",
+   "decode.0.norm1.fc.bias",
+   "decode.0.norm2.fc.bias",
+   "decode.1.norm1.fc.bias",
+   "decode.1.norm2.fc.bias",
+   "decode.2.norm1.fc.bias",
+   "decode.2.norm2.fc.bias",
+   "decode.3.norm1.fc.bias",
+   "decode.3.norm2.fc.bias",
+   "generator.noise_res.0.adain1.0.fc.bias",
+   "generator.noise_res.0.adain1.1.fc.bias",
+   "generator.noise_res.0.adain1.2.fc.bias",
+   "generator.noise_res.0.adain2.0.fc.bias",
+   "generator.noise_res.0.adain2.1.fc.bias",
+   "generator.noise_res.0.adain2.2.fc.bias",
+   "generator.noise_res.1.adain1.0.fc.bias",
+   "generator.noise_res.1.adain1.1.fc.bias",
+   "generator.noise_res.1.adain1.2.fc.bias",
+   "generator.noise_res.1.adain2.0.fc.bias",
+   "generator.noise_res.1.adain2.1.fc.bias",
+   "generator.noise_res.1.adain2.2.fc.bias",
+   "generator.resblocks.0.adain1.0.fc.bias",
+   "generator.resblocks.0.adain1.1.fc.bias",
+   "generator.resblocks.0.adain1.2.fc.bias",
+   "generator.resblocks.0.adain2.0.fc.bias",
+   "generator.resblocks.0.adain2.1.fc.bias",
+   "generator.resblocks.0.adain2.2.fc.bias",
+   "generator.resblocks.1.adain1.0.fc.bias",
+   "generator.resblocks.1.adain1.1.fc.bias",
+   "generator.resblocks.1.adain1.2.fc.bias",
+   "generator.resblocks.1.adain2.0.fc.bias",
+   "generator.resblocks.1.adain2.1.fc.bias",
+   "generator.resblocks.1.adain2.2.fc.bias",
+   "generator.resblocks.2.adain1.0.fc.bias",
+   "generator.resblocks.2.adain1.1.fc.bias",
+   "generator.resblocks.2.adain1.2.fc.bias",
+   "generator.resblocks.2.adain2.0.fc.bias",
+   "generator.resblocks.2.adain2.1.fc.bias",
+   "generator.resblocks.2.adain2.2.fc.bias",
+   "generator.resblocks.3.adain1.0.fc.bias",
+   "generator.resblocks.3.adain1.1.fc.bias",
+   "generator.resblocks.3.adain1.2.fc.bias",
+   "generator.resblocks.3.adain2.0.fc.bias",
+   "generator.resblocks.3.adain2.1.fc.bias",
+   "generator.resblocks.3.adain2.2.fc.bias",
+   "generator.resblocks.4.adain1.0.fc.bias",
+   "generator.resblocks.4.adain1.1.fc.bias",
+   "generator.resblocks.4.adain1.2.fc.bias",
+   "generator.resblocks.4.adain2.0.fc.bias",
+   "generator.resblocks.4.adain2.1.fc.bias",
+   "generator.resblocks.4.adain2.2.fc.bias",
+   "generator.resblocks.5.adain1.0.fc.bias",
+   "generator.resblocks.5.adain1.1.fc.bias",
+   "generator.resblocks.5.adain1.2.fc.bias",
+   "generator.resblocks.5.adain2.0.fc.bias",
+   "generator.resblocks.5.adain2.1.fc.bias",
+   "generator.resblocks.5.adain2.2.fc.bias"
+  ],
+  "params": 37396
+ },
+ "bytes": 191545018,
+ "build": "3b704153630c"
+}

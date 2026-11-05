@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Clone</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect x=%274%27 y=%274%27 width=%2756%27 height=%2756%27 rx=%2712%27 fill=%27%235b9cff%27/%3E%3Cpath d=%27M16 38v-12M24 44v-24M32 50V14M40 44v-24M48 38v-12%27 stroke=%27white%27 stroke-width=%275%27 stroke-linecap=%27round%27/%3E%3C/svg%3E">
+<meta name="description" content="Test Audio8 TTS (0.6B, INT4) in the browser: multilingual speech and zero-shot voice cloning with ONNX Runtime Web.">
+<style>
+  :root { --bg:#0f1216; --panel:#171b21; --panel-2:#1e242c; --border:#2a323d; --text:#e6e9ee; --muted:#8b95a5; --accent:#5b9cff; --ok:#3ddc97; --danger:#ff6b6b; --warn:#ffb454; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#f3f5f8; --panel:#fff; --panel-2:#eef1f5; --border:#d7dde6; --text:#1b2330; --muted:#5d6879; --accent:#2f6fde; } }
+  :root[data-theme="dark"] { --bg:#0f1216; --panel:#171b21; --panel-2:#1e242c; --border:#2a323d; --text:#e6e9ee; --muted:#8b95a5; }
+  * { box-sizing: border-box; } html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px 10px; border-bottom: 1px solid var(--border); }
+  header h1 { margin: 0; font-size: 20px; } header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  main { max-width: 920px; margin: 0 auto; padding: 18px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  h2 { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  textarea, input[type=text], select { width: 100%; min-width: 0; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px; font: inherit; font-size: 14px; }
+  textarea { resize: vertical; }
+  label.row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  @media (max-width: 600px) { label.row { grid-template-columns: 1fr; } }
+  label.check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .hint { font-size: 12px; color: var(--muted); } .hint.warn { color: var(--warn); } .hint.ok { color: var(--ok); }
+  .progress { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; } .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .stat { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .error { color: var(--danger); font-size: 13px; white-space: pre-wrap; } .error:empty { display: none; }
+  audio { width: 100%; }
+  .takes { display: flex; flex-direction: column; gap: 10px; }
+  .take { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--panel-2); display: flex; flex-direction: column; gap: 6px; }
+  .take .t { font-size: 13px; }
+  .log { font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); max-height: 180px; overflow: auto; white-space: pre-wrap; }
+  details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Voice Clone <a href="index.html" style="font-size:13px;font-weight:400">train a voice</a></h1>
+  <p>Audio8 TTS Preview 0.6B (INT4, Apache-2.0) in your browser: speech in 11 languages, with optional zero-shot voice cloning from a short reference recording.</p>
+</header>
+<main>
+  <section class="panel">
+    <h2>Text</h2>
+    <textarea id="text" rows="3">Hola, esta es una prueba del nuevo modelo de voz, funcionando directamente en el navegador.</textarea>
+    <div class="hint">Write in any of: English, Spanish, French, German, Italian, Dutch, Polish, Japanese, Korean, Chinese, Cantonese. The model reads the language from the text. Keep each take to a sentence or two.</div>
+  </section>
+
+  <section class="panel">
+    <h2>Voice</h2>
+    <label class="row"><span>Voice</span>
+      <select id="voiceMode"><option value="none">Model default (no reference)</option><option value="clone">Clone from a reference recording</option></select></label>
+    <div id="cloneBox" hidden style="display:flex;flex-direction:column;gap:10px">
+      <label class="row"><span>Reference audio</span><input type="file" id="refFile" accept="audio/*,video/*"></label>
+      <div class="hint" id="refInfo">5–15 s of one person speaking clearly. Longer files are trimmed to the first 15 s.</div>
+      <label class="row"><span>Its transcript</span><input type="text" id="refText" placeholder="Exactly what is said in the reference"></label>
+      <div class="btns"><button id="autoTranscript" disabled>Transcribe with Whisper</button><span class="hint">The transcript must match the recording word for word.</span></div>
+      <label class="row"><span>Release ref</span><input type="text" id="relRef" placeholder="Contract or release ID"></label>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Generate</h2>
+    <div class="grid">
+      <label class="row"><span>Compute</span><select id="device"><option value="auto">Auto (WebGPU if available)</option><option value="webgpu">WebGPU</option><option value="wasm">CPU (WebAssembly)</option></select></label>
+      <label class="row"><span>Max length</span><select id="maxFrames"><option value="215">10 s</option><option value="430" selected>20 s</option><option value="645">30 s</option></select></label>
+      <label class="row"><span>Temperature</span><input type="text" id="temp" value="0.7"></label>
+      <label class="row"><span>Seed</span><input type="text" id="seed" placeholder="random"></label>
+    </div>
+    <div class="btns"><button class="primary" id="go">Generate</button><button id="stop" disabled>Stop</button><span class="stat" id="stat"></span></div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="hint" id="envHint"></div>
+    <div class="error" id="error"></div>
+    <div class="takes" id="takes"></div>
+    <details><summary>Log</summary><div class="log" id="log"></div></details>
+  </section>
+</main>
+
+<script type="text/plain" id="a8WorkerSrc">
+// Audio8 TTS (DualAR, Edge0/Audio8-TTS-Preview-0.6B-ONNX-INT4) in the browser with ONNX Runtime Web.
+// Prompt format and sampling follow the model's own processing_arktts.py / modeling_arktts.py.
+let ort = null, T = null, tok = null, man = null, base = '';
+const sess = {}, embMeta = {};
+const post = (m, t) => self.postMessage(m, t || []);
+
+// ---------- fp16 helpers ----------
+const f32 = new Float32Array(1), u32 = new Uint32Array(f32.buffer);
+// float32 -> float16 bits, round-to-nearest-even (matches numpy / ONNX Runtime casts)
+function toHalf(v) {
+  f32[0] = v; const x = u32[0], sign = (x >>> 16) & 0x8000;
+  let e = (x >>> 23) & 0xff, m = x & 0x7fffff;
+  if (e === 0xff) return sign | 0x7c00 | (m ? 0x200 : 0);
+  e = e - 127 + 15;
+  if (e >= 31) return sign | 0x7c00;
+  if (e <= 0) {
+    if (e < -10) return sign;
+    m |= 0x800000; const shift = 14 - e, half = 1 << (shift - 1), rem = m & ((1 << shift) - 1);
+    let r = m >>> shift; if (rem > half || (rem === half && (r & 1))) r++;
+    return sign | r;
+  }
+  const rem = m & 0x1fff; let r = (e << 10) | (m >>> 13);
+  if (rem > 0x1000 || (rem === 0x1000 && (r & 1))) r++;
+  return sign | r;
+}
+function fromHalf(h) {
+  const s = h & 0x8000 ? -1 : 1, e = (h >> 10) & 0x1f, m = h & 0x3ff;
+  if (e === 0) return s * m * 2 ** -24;
+  if (e === 31) return m ? NaN : s * Infinity;
+  return s * (1 + m / 1024) * 2 ** (e - 15);
+}
+// Embedding lookups for the patched graphs: rows of a packed 4-bit table, (q - zero_point) * scale per block.
+const tables = {};
+function makeTable(meta, data) {
+  const w = meta.weight, sc = meta.scales, zp = meta.zero_points, [V, C] = w.dims, B = meta.block_size, nb = C / B;
+  const key = `${w.offset}`;
+  if (tables[key]) return tables[key];
+  const scales = new Uint16Array(data.slice(sc.offset, sc.offset + sc.length).buffer);
+  return (tables[key] = { V, C, B, nb, q: data.slice(w.offset, w.offset + w.length), zp: data.slice(zp.offset, zp.offset + zp.length), scales, zpRow: Math.ceil(nb / 2) });
+}
+function lookup(t, idx) { // idx: array of row numbers -> Uint16Array (fp16) [idx.length, C]
+  const out = new Uint16Array(idx.length * t.C), half = t.C / 2;
+  for (let n = 0; n < idx.length; n++) {
+    const r = idx[n], qo = r * half, zo = r * t.zpRow, so = r * t.nb, oo = n * t.C;
+    for (let b = 0; b < t.nb; b++) {
+      const zb = t.zp[zo + (b >> 1)], z = b & 1 ? zb >> 4 : zb & 15, scale = fromHalf(t.scales[so + b]);
+      for (let k = 0; k < t.B; k += 2) {
+        const byte = t.q[qo + ((b * t.B + k) >> 1)];
+        out[oo + b * t.B + k] = toHalf(((byte & 15) - z) * scale);
+        out[oo + b * t.B + k + 1] = toHalf(((byte >> 4) - z) * scale);
+      }
+    }
+  }
+  return out;
+}
+const u16 = (t) => new Uint16Array(t.data.buffer, t.data.byteOffset, t.data.length);
+
+// ---------- loading ----------
+async function cachedBytes(url, label) {
+  let c = null;
+  try { c = await caches.open('voice-adapter-models'); const hit = await c.match(url); if (hit) return new Uint8Array(await hit.arrayBuffer()); } catch (e) {}
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Could not download ${label} (${r.status}).`);
+  const total = Number(r.headers.get('content-length')) || 0, reader = r.body.getReader(), parts = [];
+  let loaded = 0;
+  for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); loaded += value.length; post({ type: 'download', status: 'progress', name: 'audio8', file: label, loaded, total }); }
+  post({ type: 'download', status: 'done', name: 'audio8', file: label });
+  const out = new Uint8Array(loaded); let o = 0; for (const v of parts) { out.set(v, o); o += v.length; }
+  if (c) try { await c.put(url, new Response(out)); } catch (e) {}
+  return out;
+}
+// slow/fast use the patched graphs (GatherBlockQuantized replaced by emb_* inputs) from graphBase;
+// the weights (.data) come unchanged from the Hugging Face repo.
+const GRAPHS = {
+  slow: ['slow_ar_int4.web.onnx', 'slow_ar_int4.onnx.data', 'slow_ar_int4.web.json'],
+  fast: ['fast_ar_int4.web.onnx', 'fast_ar_int4.onnx.data', 'fast_ar_int4.web.json'],
+  dec: ['codec_decoder_fp16.onnx', 'codec_decoder_fp16.onnx.data'],
+  enc: ['registration/codec_encoder_fp16.onnx', 'registration/codec_encoder_fp16.onnx.data'],
+};
+async function load(p) {
+  if (!ort) {
+    ort = await import(p.ortUrl);
+    ort.env.wasm.wasmPaths = p.wasmBase;
+    ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(8, navigator.hardwareConcurrency || 4) : 1;
+  }
+  base = p.base;
+  if (!man) man = await (await fetch(new URL('runtime_manifest.json', base), { cache: 'no-cache' })).json();
+  if (!tok && p.tokenizer) {
+    T = await import(p.tfUrl);
+    tok = await T.AutoTokenizer.from_pretrained(p.tokenizer);
+  }
+  const devices = {};
+  for (const name of p.graphs) {
+    if (!sess[name]) {
+      const [g, d, j] = GRAPHS[name];
+      post({ type: 'status', message: `Loading Audio8 ${name}` });
+      const gb = j ? p.graphBase : base;
+      const model = await cachedBytes(new URL(g, gb).href, g.split('/').pop());
+      const data = await cachedBytes(new URL(d, base).href, d.split('/').pop());
+      if (j) {
+        embMeta[name] = await (await fetch(new URL(j, gb), { cache: 'no-cache' })).json();
+        for (const m of embMeta[name]) m.table = makeTable(m, data);
+      }
+      const ep = name !== 'enc' && name !== 'dec' && p.device === 'webgpu' ? ['webgpu', 'wasm'] : ['wasm'];
+      let err;
+      for (const e of ep) {
+        try { sess[name] = await ort.InferenceSession.create(model, { executionProviders: [e], externalData: [{ path: d.split('/').pop(), data }], graphOptimizationLevel: 'all' }); sess[name].ep = e; break; }
+        catch (x) { err = x; post({ type: 'log', message: `Audio8 ${name} on ${e} failed: ${x.message || x}` }); }
+      }
+      if (!sess[name]) throw err;
+    }
+    devices[name] = sess[name].ep;
+  }
+  return { devices, manifest: man };
+}
+async function unload(names) { for (const n of names) if (sess[n]) { try { await sess[n].release(); } catch (e) {} delete sess[n]; } return true; }
+
+// ---------- prompt ----------
+const clean = (s) => String(s).trim().split(/\s+/).join(' ');
+const enc = (s) => Array.from(tok.encode(s, { add_special_tokens: false }));
+function promptRows(text, ref) {
+  const target = clean(text);
+  let prefix, suffix;
+  if (!ref) {
+    prefix = [...enc('<|im_start|>system\n'), ...enc('convert the provided text to speech'), ...enc('<|im_end|>\n'),
+      ...enc('<|im_start|>user\n'), ...enc(target), ...enc('<|im_end|>\n'), ...enc('<|im_start|>assistant\n<|voice|>')];
+    suffix = [];
+  } else {
+    const rt = clean(ref.text);
+    prefix = [...enc('<|im_start|>system\n'), ...enc('convert the provided text to speech reference to the following:\n\nText:\n'),
+      ...enc(/<\|speaker:\d+\|>/.test(rt) ? rt : `<|speaker:0|>${rt}`), ...enc('\n\nSpeech:\n')];
+    suffix = [...enc('<|im_end|>\n'), ...enc('<|im_start|>user\n'), ...enc(target), ...enc('<|im_end|>\n'), ...enc('<|im_start|>assistant\n<|voice|>')];
+  }
+  const F = ref ? ref.frames : 0, L = prefix.length + F + suffix.length, NC = man.num_codebooks;
+  const rows = new BigInt64Array((NC + 1) * L);
+  prefix.forEach((v, i) => { rows[i] = BigInt(v); });
+  for (let f = 0; f < F; f++) {
+    rows[prefix.length + f] = BigInt(ref.codes[f] + man.semantic_begin_id);           // codes row 0 -> semantic ids
+    for (let k = 0; k < NC; k++) rows[(k + 1) * L + prefix.length + f] = BigInt(ref.codes[k * F + f]);
+  }
+  suffix.forEach((v, i) => { rows[prefix.length + F + i] = BigInt(v); });
+  return { rows, L };
+}
+
+// ---------- sampling (matches ArkttsLegacyTopKTopPLogitsProcessor + Gumbel-style draw) ----------
+let rngState = 0x9e3779b9;
+function rand() { rngState ^= rngState << 13; rngState ^= rngState >>> 17; rngState ^= rngState << 5; return ((rngState >>> 0) + 0.5) / 4294967296; }
+function sampleFrom(logits, off, n, topK, topP, temp) {
+  const idx = Array.from({ length: n }, (_, i) => i).sort((a, b) => logits[off + b] - logits[off + a]);
+  let mx = logits[off + idx[0]], z = 0;
+  for (let i = 0; i < n; i++) z += Math.exp(logits[off + idx[i]] - mx);
+  const keep = []; let cum = 0;
+  for (let i = 0; i < n; i++) { cum += Math.exp(logits[off + idx[i]] - mx) / z; if (i > 0 && (cum > topP || i >= topK)) break; keep.push(idx[i]); }
+  // softmax over kept scores / temperature, then categorical draw
+  const t = Math.max(1e-5, temp), w = keep.map((i) => Math.exp((logits[off + i] - logits[off + keep[0]]) / t));
+  let s = 0; for (const v of w) s += v;
+  let r = rand() * s; for (let i = 0; i < keep.length; i++) { r -= w[i]; if (r <= 0) return keep[i]; }
+  return keep[keep.length - 1];
+}
+
+// ---------- generation ----------
+async function generate({ text, ref, maxFrames = 512, temperature = 0.7, topP = 0.9, topK = 50, seed }, id) {
+  if (seed != null) rngState = (seed >>> 0) || 1;
+  const NC = man.num_codebooks, LAY = man.num_layers, FL = man.num_fast_layers, MAX = man.max_seq_len, HD = man.head_dim, H = man.n_local_heads;
+  const EOS_IDX = man.slow_logits_size - 1, BEGIN = man.semantic_begin_id;
+  const { rows, L } = promptRows(text, ref);
+  if (L >= MAX - 8) throw new Error('Text plus reference voice is too long for the model (2,048 positions).');
+  maxFrames = Math.min(maxFrames, MAX - L - 1);
+  const cacheK = [], cacheV = [];
+  for (let i = 0; i < LAY; i++) { cacheK.push(new Uint16Array(H * MAX * HD)); cacheV.push(new Uint16Array(H * MAX * HD)); }
+  const writeDelta = (cache, delta, S, pos0) => {
+    const d = u16(delta);
+    for (let h = 0; h < H; h++) for (let s = 0; s < S; s++) cache.set(d.subarray((h * S + s) * HD, (h * S + s + 1) * HD), (h * MAX + pos0 + s) * HD);
+  };
+  async function slowRun(codes, S, pos0) {
+    const feeds = { codes: new ort.Tensor('int64', codes, [1, NC + 1, S]), input_pos: new ort.Tensor('int64', BigInt64Array.from({ length: S }, (_, i) => BigInt(pos0 + i)), [S]) };
+    for (const m of embMeta.slow) {
+      const idx = new Int32Array(S); for (let s = 0; s < S; s++) idx[s] = Number(codes[m.source.row * S + s]) + m.source.add;
+      feeds[m.input] = new ort.Tensor('float16', lookup(m.table, idx), [1, S, m.table.C]);
+    }
+    for (let i = 0; i < LAY; i++) { feeds[`cache_key_${i}`] = new ort.Tensor('float16', cacheK[i], [1, H, MAX, HD]); feeds[`cache_value_${i}`] = new ort.Tensor('float16', cacheV[i], [1, H, MAX, HD]); }
+    const o = await sess.slow.run(feeds);
+    for (let i = 0; i < LAY; i++) { writeDelta(cacheK[i], o[`key_delta_${i}`], S, pos0); writeDelta(cacheV[i], o[`value_delta_${i}`], S, pos0); }
+    const lg = o.logits.data, V = man.slow_logits_size, last = (o.logits.dims[1] - 1) * V;
+    const hid = u16(o.slow_hidden), hd = o.slow_hidden.dims[2], hlast = (o.slow_hidden.dims[1] - 1) * hd;
+    return { logits: lg.slice(last, last + V), hidden: Uint16Array.from(hid.subarray(hlast, hlast + hd)) };
+  }
+  const FH = man.n_local_heads ? man.fast_n_local_heads : 2, FHD = man.fast_head_dim;
+  async function fastFrame(hidden, c0) {
+    const fk = [], fv = []; for (let i = 0; i < FL; i++) { fk.push(new Uint16Array(FH * NC * FHD)); fv.push(new Uint16Array(FH * NC * FHD)); }
+    const hiddenT = new ort.Tensor('float16', hidden, [1, 1, hidden.length]);
+    const step = async (tokenId, useSlow, pos) => {
+      const fm = embMeta.fast[0];
+      const feeds = { [fm.input]: new ort.Tensor('float16', lookup(fm.table, [tokenId + fm.source.add]), [1, 1, fm.table.C]),
+        slow_hidden: hiddenT, token_id: new ort.Tensor('int64', BigInt64Array.from([BigInt(tokenId)]), [1, 1]),
+        use_slow_hidden: new ort.Tensor('bool', Uint8Array.from([useSlow ? 1 : 0]), [1]), input_pos: new ort.Tensor('int64', BigInt64Array.from([BigInt(pos)]), [1]) };
+      for (let i = 0; i < FL; i++) { feeds[`cache_key_${i}`] = new ort.Tensor('float16', fk[i], [1, FH, NC, FHD]); feeds[`cache_value_${i}`] = new ort.Tensor('float16', fv[i], [1, FH, NC, FHD]); }
+      const o = await sess.fast.run(feeds);
+      for (let i = 0; i < FL; i++) {
+        const dk = u16(o[`key_delta_${i}`]), dv = u16(o[`value_delta_${i}`]);
+        for (let h = 0; h < FH; h++) { fk[i].set(dk.subarray(h * FHD, (h + 1) * FHD), (h * NC + pos) * FHD); fv[i].set(dv.subarray(h * FHD, (h + 1) * FHD), (h * NC + pos) * FHD); }
+      }
+      return o.logits.data;
+    };
+    await step(0, true, 0);
+    const cb = [c0];
+    let cur = c0;
+    for (let p = 1; p < NC; p++) {
+      const lg = await step(cur, false, p);
+      cur = sampleFrom(lg, 0, 4096, topK, topP, temperature);
+      cb.push(cur);
+    }
+    return cb;
+  }
+  const t0 = performance.now();
+  let { logits, hidden } = await slowRun(rows, L, 0);
+  const tPrefill = performance.now() - t0;
+  const frames = []; let previous = null;
+  for (let step = 0; step < maxFrames; step++) {
+    // semantic token with repetition-aware sampling (RAS)
+    const normal = sampleFrom(logits, 0, man.slow_logits_size, topK, topP, temperature);
+    let sem = normal;
+    if (previous && normal !== EOS_IDX && previous.includes(normal + BEGIN)) sem = sampleFrom(logits, 0, man.slow_logits_size, topK, 0.9, 1.0);
+    if (sem === EOS_IDX) break;
+    const semId = sem + BEGIN;
+    const cb = await fastFrame(hidden, Math.min(4095, Math.max(0, sem)));
+    frames.push(cb);
+    if (previous === null) previous = new Array(10).fill(0); else { previous.shift(); previous.push(semId); }
+    const col = new BigInt64Array(NC + 1); col[0] = BigInt(semId); for (let k = 0; k < NC; k++) col[k + 1] = BigInt(cb[k]);
+    ({ logits, hidden } = await slowRun(col, 1, L + step));
+    if (step % 10 === 0) post({ id, type: 'progress', frames: step + 1, msPerFrame: (performance.now() - t0 - tPrefill) / (step + 1), prefillMs: tPrefill });
+  }
+  const N = frames.length, codes = new Int32Array(NC * N);
+  for (let f = 0; f < N; f++) for (let k = 0; k < NC; k++) codes[k * N + f] = frames[f][k];
+  return { codes, frames: N, prefillMs: tPrefill, totalMs: performance.now() - t0 };
+}
+async function decode({ codes, frames }) {
+  const c = BigInt64Array.from(codes, (v) => BigInt(v));
+  const o = await sess.dec.run({ codes: new ort.Tensor('int64', c, [1, man.num_codebooks, frames]) });
+  return Float32Array.from(o.audio.data);
+}
+async function register({ audio }) { // audio: Float32Array at 44.1 kHz mono
+  const h = new Uint16Array(audio.length); for (let i = 0; i < audio.length; i++) h[i] = toHalf(audio[i]);
+  const o = await sess.enc.run({ audio: new ort.Tensor('float16', h, [1, 1, audio.length]) });
+  const F = o.codes.dims[2], codes = Int32Array.from(o.codes.data, (v) => Number(v));
+  return { codes, frames: F };
+}
+
+self.onmessage = async (ev) => {
+  const { id, type, payload } = ev.data;
+  try {
+    let result, transfer = [];
+    if (type === 'load') result = await load(payload);
+    else if (type === 'unload') result = await unload(payload.graphs);
+    else if (type === 'generate') result = await generate(payload, id);
+    else if (type === 'decode') { result = await decode(payload); transfer = [result.buffer]; }
+    else if (type === 'register') result = await register(payload);
+    else throw new Error('Unknown message ' + type);
+    post({ id, type: 'done', result }, transfer);
+  } catch (e) { post({ id, type: 'error', message: (e && e.stack) || String(e) }); }
+};
+
+</script>
+
+<script type="module">
+const ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/ort.webgpu.min.mjs';
+const ORT_WASM = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/';
+const TF_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0/dist/transformers.min.js';
+const HF_BASE = 'https://huggingface.co/Edge0/Audio8-TTS-Preview-0.6B-ONNX-INT4/resolve/main/';
+const GRAPH_BASE = new URL('models/audio8/', location.href).href;
+const $ = (id) => document.getElementById(id);
+const log = (m) => { const l = $('log'); l.textContent += `[${new Date().toLocaleTimeString()}] ${m}\n`; l.scrollTop = l.scrollHeight; console.log('[audio8]', m); };
+
+// ---- worker client ----
+const worker = new Worker(URL.createObjectURL(new Blob([$('a8WorkerSrc').textContent], { type: 'text/javascript' })), { type: 'module' });
+let seq = 0; const pend = new Map(); const dl = new Map();
+worker.onmessage = (e) => {
+  const m = e.data;
+  if (m.type === 'download') { if (m.status === 'progress') dl.set(m.file, m); else dl.delete(m.file); const tot = [...dl.values()]; $('stat').textContent = tot.length ? `Downloading ${tot.map((d) => `${d.file} ${d.total ? Math.round(d.loaded / d.total * 100) + '%' : ''}`).join(', ')}` : ''; return; }
+  if (m.type === 'status' || m.type === 'log') { log(m.message); if (m.type === 'status') $('stat').textContent = m.message; return; }
+  const p = pend.get(m.id); if (!p) return;
+  if (m.type === 'progress') { p.onProgress?.(m); return; }
+  pend.delete(m.id); m.type === 'done' ? p.res(m.result) : p.rej(new Error(m.message));
+};
+const call = (type, payload, onProgress) => new Promise((res, rej) => { const id = ++seq; pend.set(id, { res, rej, onProgress }); worker.postMessage({ id, type, payload }); });
+
+let gpu = false;
+try { gpu = !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch (e) {}
+$('envHint').textContent = (gpu ? 'WebGPU is available.' : 'WebGPU is not available here, so generation runs on the CPU (slow: several minutes per sentence).')
+  + (self.crossOriginIsolated ? ' Multi-threaded CPU is enabled.' : ' CPU runs single-threaded (serve with tools/serve.py to enable threads).')
+  + ' First use downloads about 600 MB of model files (cached afterwards), plus 415 MB once if you clone a voice.';
+const device = () => $('device').value === 'auto' ? (gpu ? 'webgpu' : 'wasm') : $('device').value;
+const loaded = new Set(); let loadedDevice = null;
+async function ensure(graphs) {
+  const need = graphs.filter((g) => !loaded.has(g) || (g !== 'dec' && g !== 'enc' && loadedDevice !== device()));
+  if (!need.length) return;
+  if (loadedDevice && loadedDevice !== device()) { await call('unload', { graphs: ['slow', 'fast'] }); loaded.delete('slow'); loaded.delete('fast'); }
+  const r = await call('load', { ortUrl: ORT_URL, wasmBase: ORT_WASM, tfUrl: TF_URL, tokenizer: 'Edge0/Audio8-TTS-Preview-0.6b', base: HF_BASE, graphBase: GRAPH_BASE, graphs: need, device: device() });
+  need.forEach((g) => loaded.add(g)); loadedDevice = device();
+  log('Ready: ' + Object.entries(r.devices).map(([k, v]) => `${k} on ${v}`).join(', '));
+}
+
+// ---- reference voice ----
+let ref = null, refAudio = null;
+$('voiceMode').addEventListener('change', () => { $('cloneBox').hidden = $('voiceMode').value !== 'clone'; $('cloneBox').style.display = $('cloneBox').hidden ? 'none' : 'flex'; });
+$('cloneBox').style.display = 'none';
+async function decode(file, rate) {
+  const ctx = new AudioContext();
+  try {
+    const d = await ctx.decodeAudioData(await file.arrayBuffer());
+    const len = Math.floor(Math.min(15, d.duration) * rate);
+    const off = new OfflineAudioContext(1, len, rate); const s = off.createBufferSource(); s.buffer = d; s.connect(off.destination); s.start();
+    return (await off.startRendering()).getChannelData(0).slice();
+  } finally { ctx.close(); }
+}
+$('refFile').addEventListener('change', async () => {
+  ref = null; refAudio = null; const f = $('refFile').files[0]; if (!f) return;
+  try { refAudio = await decode(f, 44100); $('refInfo').textContent = `${f.name}: using ${(refAudio.length / 44100).toFixed(1)} s.`; $('autoTranscript').disabled = false; }
+  catch (e) { $('error').textContent = 'Could not read that file: ' + e.message; }
+});
+let asr = null;
+$('autoTranscript').addEventListener('click', async () => {
+  if (!refAudio) return;
+  $('autoTranscript').disabled = true; $('stat').textContent = 'Transcribing the reference…';
+  try {
+    if (!asr) { const T = await import(TF_URL); asr = await T.pipeline('automatic-speech-recognition', 'Xenova/whisper-small', { dtype: 'q8', device: gpu ? 'webgpu' : 'wasm' }); }
+    const n = Math.floor(refAudio.length * 16000 / 44100), a16 = new Float32Array(n);
+    for (let i = 0; i < n; i++) a16[i] = refAudio[Math.min(refAudio.length - 1, Math.round(i * 44100 / 16000))];
+    $('refText').value = (await asr(a16)).text.trim(); ref = null;
+    $('stat').textContent = 'Check the transcript, then generate.';
+  } catch (e) { $('error').textContent = e.message; }
+  finally { $('autoTranscript').disabled = false; }
+});
+$('refText').addEventListener('input', () => { if (ref) ref.text = $('refText').value; });
+const releaseOk = () => !!$('relRef').value.trim();
+
+// ---- generate ----
+let stopped = false;
+$('stop').addEventListener('click', () => { stopped = true; worker.terminate(); location.reload(); });
+$('go').addEventListener('click', async () => {
+  const text = $('text').value.trim(); if (!text) return;
+  $('error').textContent = ''; $('go').disabled = true; $('stop').disabled = false; stopped = false;
+  try {
+    let refPayload = null;
+    if ($('voiceMode').value === 'clone') {
+      if (!refAudio) throw new Error('Choose a reference recording first.');
+      if (!$('refText').value.trim()) throw new Error('Enter the reference transcript (or use Transcribe with Whisper).');
+      if (!releaseOk()) throw new Error('Enter the release reference for this voice.');
+      if (!ref || ref.audio !== refAudio) {
+        $('stat').textContent = 'Registering the reference voice…';
+        await ensure(['enc']);
+        const r = await call('register', { audio: refAudio });
+        ref = { audio: refAudio, codes: r.codes, frames: r.frames };
+        await call('unload', { graphs: ['enc'] }); loaded.delete('enc');
+        log(`Reference registered: ${r.frames} frames.`);
+      }
+      refPayload = { codes: ref.codes, frames: ref.frames, text: $('refText').value.trim() };
+    }
+    await ensure(['slow', 'fast', 'dec']);
+    const maxFrames = Number($('maxFrames').value), t0 = performance.now();
+    const seed = $('seed').value.trim() ? Number($('seed').value) : Math.floor(Math.random() * 2 ** 31);
+    const g = await call('generate', { text, ref: refPayload, maxFrames, temperature: Number($('temp').value) || 0.7, seed }, (m) => {
+      $('bar').style.width = `${Math.min(100, m.frames / maxFrames * 100)}%`;
+      const rt = (1000 / 21.53) / m.msPerFrame;
+      $('stat').textContent = `${(m.frames / 21.53).toFixed(1)} s of audio · ${m.msPerFrame.toFixed(0)} ms per frame (${rt >= 1 ? rt.toFixed(1) + '× real time' : (1 / rt).toFixed(1) + '× slower than real time'})`;
+    });
+    $('stat').textContent = 'Decoding audio…';
+    const audio = await call('decode', { codes: g.codes, frames: g.frames });
+    const secs = audio.length / 44100, wall = (performance.now() - t0) / 1000;
+    $('bar').style.width = '100%';
+    $('stat').textContent = `${secs.toFixed(1)} s of audio in ${wall.toFixed(1)} s (${(secs / wall).toFixed(2)}× real time)`;
+    log(`Generated ${g.frames} frames (${secs.toFixed(1)} s) in ${wall.toFixed(1)} s; prompt ${g.prefillMs.toFixed(0)} ms; seed ${seed}.`);
+    addTake(text, audio, refPayload ? 'cloned voice' : 'default voice', seed);
+  } catch (e) { if (!stopped) { $('error').textContent = e.message.split('\n')[0]; log(e.message); } }
+  finally { $('go').disabled = false; $('stop').disabled = true; }
+});
+function wav(f32, sr) {
+  const n = f32.length, b = new DataView(new ArrayBuffer(44 + n * 2)), w = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+  b.setUint32(24, sr, true); b.setUint32(28, sr * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, 'data'); b.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) b.setInt16(44 + i * 2, Math.max(-1, Math.min(1, f32[i])) * 32767, true);
+  return new Blob([b], { type: 'audio/wav' });
+}
+function addTake(text, audio, kind, seed) {
+  const url = URL.createObjectURL(wav(audio, 44100));
+  const box = document.createElement('div'); box.className = 'take';
+  const t = document.createElement('div'); t.className = 't'; t.textContent = `${kind} · seed ${seed}: ${text}`;
+  const a = document.createElement('audio'); a.controls = true; a.src = url;
+  const d = document.createElement('a'); d.href = url; d.download = `audio8-${seed}.wav`; d.textContent = 'Download WAV'; d.className = 'hint';
+  box.append(t, a, d); $('takes').prepend(box); a.play().catch(() => {});
+}
+</script>
+</body>
+</html>

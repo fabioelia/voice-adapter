@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Adapter</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Voice Adapter</h1>
+    <span class="muted" id="gpu"></span>
+    <a href="clone.html">zero-shot clone</a>
+  </header>
+
+  <main>
+    <section>
+      <h2>Recordings</h2>
+      <div class="buttons">
+        <button id="addBtn">Add files…</button><input type="file" id="addInput" accept="audio/*,video/*" multiple hidden>
+        <button id="recordBtn">Record</button>
+        <button id="videoBtn">Voices in a video…</button><input type="file" id="videoInput" accept="video/*,audio/*,.mkv" hidden>
+        <button id="captionBtn">Audio + captions…</button><input type="file" id="captionInput" accept="audio/*,video/*,.vtt,.srt,.ttml,.dfxp,.xml" multiple hidden>
+      </div>
+      <div class="fields">
+        <label>Scan <select id="scanMinutes"><option value="3">3 min</option><option value="5" selected>5 min</option><option value="10">10 min</option><option value="20">20 min</option></select></label>
+        <label><input type="checkbox" id="isolate" checked> Separate from music</label>
+        <label>Caption offset <input type="text" id="captionOffset" placeholder="auto" size="6"></label>
+      </div>
+      <div class="list" id="found"></div>
+      <div class="list" id="clips"></div>
+      <div class="muted" id="clipsHint"></div>
+    </section>
+
+    <section>
+      <h2>Train</h2>
+      <div class="fields">
+        <label>Method <select id="method"><option value="neural">Deep training</option><option value="search">Quick match</option></select></label>
+        <label>Steps <b id="stepsVal">200</b> <input type="range" id="steps" min="50" max="1500" step="50" value="200"></label>
+      </div>
+      <div class="buttons">
+        <button class="primary" id="trainBtn" disabled>Train</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <button id="listenBtn" disabled>▶ Listen</button>
+      </div>
+      <canvas id="chart" width="600" height="180"></canvas>
+      <div class="muted" id="trainStatus"></div>
+      <div class="fields">
+        <label>Talent <input type="text" id="talent" placeholder="Name"></label>
+        <label>Release ref <input type="text" id="release" placeholder="Contract or release ID"></label>
+        <button id="saveBtn" disabled>Save voice</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Voices</h2>
+      <div class="buttons"><button id="importBtn">Import…</button><input type="file" id="importInput" accept=".json,application/json" hidden></div>
+      <div class="list" id="voices"></div>
+    </section>
+
+    <section>
+      <h2>Speak</h2>
+      <textarea id="speakText" rows="4">Hello there. This line was generated on this device.</textarea>
+      <div class="fields">
+        <label>Voice <select id="speakVoice"></select></label>
+        <label>Pitch <b id="speakPitchVal">1.00</b> <input type="range" id="speakPitch" min="0.7" max="1.4" step="0.01" value="1"></label>
+        <label>Pace <b id="speakPaceVal">1.00</b> <input type="range" id="speakPace" min="0.6" max="1.6" step="0.01" value="1"></label>
+      </div>
+      <div class="buttons">
+        <button class="primary" id="speakBtn">Speak</button>
+        <button id="speakStop" disabled>Stop</button>
+        <button id="speakSave" disabled>Download WAV</button>
+        <span class="muted" id="speakStatus"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Settings</h2>
+      <div class="fields">
+        <label>Whisper <select id="asrModel"></select></label>
+        <label>Compute <select id="device"><option value="auto">Auto</option><option value="webgpu">WebGPU</option><option value="wasm">WebAssembly</option></select></label>
+        <label>Separation <select id="sepQuality"><option value="4">Best</option><option value="6" selected>Balanced</option><option value="9">Fast</option></select></label>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="progress" id="progress"><div></div></div>
+    <div class="status"><span id="stage">Idle</span><span id="progressText"></span></div>
+    <div class="error" id="error"></div>
+    <div class="downloads" id="downloads"></div>
+    <details><summary>Log</summary><div class="log" id="log"></div></details>
+  </footer>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

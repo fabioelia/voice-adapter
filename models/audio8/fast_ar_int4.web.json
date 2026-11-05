@@ -1,0 +1,42 @@
+[
+ {
+  "input": "emb_0",
+  "node": "/fast_embeddings/Gather_Q4",
+  "source": {
+   "from": "token_id",
+   "add": 0
+  },
+  "index_expr": "Cast(token_id)",
+  "block_size": 32,
+  "weight": {
+   "location": "fast_ar_int4.onnx.data",
+   "offset": 32932096,
+   "length": 1835008,
+   "dims": [
+    4096,
+    896
+   ],
+   "dtype": 21
+  },
+  "scales": {
+   "location": "fast_ar_int4.onnx.data",
+   "offset": 34767104,
+   "length": 229376,
+   "dims": [
+    4096,
+    28
+   ],
+   "dtype": 10
+  },
+  "zero_points": {
+   "location": "fast_ar_int4.onnx.data",
+   "offset": 34996480,
+   "length": 57344,
+   "dims": [
+    4096,
+    28
+   ],
+   "dtype": 21
+  }
+ }
+]
