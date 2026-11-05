@@ -42,7 +42,8 @@ async function train() {
   result = null; showError(''); sync();
   try {
     result = await ($('method').value === 'neural' ? deepTrain : quickMatch)(job, { history: drawChart });
-    setStage(`Done · match ${result.heldOut?.toFixed(3)} on an unseen sentence (start ${result.baseline.toTarget?.toFixed(3)})`); setProgress(1);
+    const weaker = result.heldOut < result.baseline.toTarget;
+    setStage(`Done · match ${result.heldOut?.toFixed(3)} on an unseen sentence (start ${result.baseline.toTarget?.toFixed(3)})${weaker ? ' · below the starting voice: add more audio (1–5 min) or train longer' : ''}`); setProgress(1);
   } catch (e) { showError(friendlyError(e)); setStage('Training failed'); }
   finally { job = null; sync(); }
 }
